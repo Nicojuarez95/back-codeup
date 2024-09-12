@@ -1,51 +1,51 @@
-import Event from '../models/eventSchema.js'
-import Place from '../models/placeSchema.js'
+import jwt from 'jsonwebtoken';
+import Event from '../models/eventSchema.js';
+import Place from '../models/placeSchema.js';
+import User from '../models/userSchema.js';
 
 const controller = {
-
-    create_event : async (req, res, next) => {
+    create_event: async (req, res, next) => {
         try {
-            const { place: placeId, date, name, photo, description, attendees, minimumAge, organizer } = req.body;
-    
-            // Verificar si el lugar existe
+            // Extraer el token del encabezado
+            const token = req.headers.authorization?.split(' ')[1];
+            if (!token) {
+                return res.status(401).json({ message: 'No token provided' });
+            }
+
+            // Verificar el token
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            const userId = decoded.id;
+
+            // Verificar si el usuario existe
+            const user = await User.findById(userId);
+            if (!user) {
+                return res.status(404).json({ message: 'User not found' });
+            }
+
+            // Verificar si el lugar existe y la fecha está disponible
+            const { place: placeId, date, name, photo, description, minimumAge } = req.body;
             const place = await Place.findById(placeId);
             if (!place) {
-                return res.status(404).json({
-                    success: false,
-                    message: 'Place not found'
-                });
+                return res.status(404).json({ message: 'Place not found' });
             }
-    
-            // Verificar si la fecha ya está ocupada en el mismo lugar
-            const existingEvent = await Event.findOne({ place: placeId, date });
-            if (existingEvent) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'The date is already taken for this place'
-                });
+
+            // Verificar si la fecha ya está ocupada
+            const eventsOnDate = await Event.find({ place: placeId, date });
+            if (eventsOnDate.length > 0) {
+                return res.status(400).json({ message: 'Date is already booked' });
             }
-    
-            // Verificar que el organizador existe y es el usuario que creó el lugar
-            const user = await User.findById(organizer);
-            if (!user) {
-                return res.status(404).json({
-                    success: false,
-                    message: 'Organizer not found'
-                });
-            }
-    
-            // Crear el nuevo evento
+
+            // Crear el evento
             const event = await Event.create({
                 place: placeId,
                 date,
                 name,
                 photo,
                 description,
-                attendees,
                 minimumAge,
-                organizer
+                organizer: userId
             });
-    
+
             return res.status(201).json({
                 success: true,
                 message: 'Event created successfully',
@@ -58,22 +58,71 @@ const controller = {
 
     get_event: async (req, res, next) => {
         try {
-            if (req.query.name) {
-                filter.name = new RegExp(req.query.name, 'i')
-            }
-            const events = await Event.find()
-            if(events){
+            const events = await Event.find();
             return res.status(200).json({
-                success : true,
+                success: true,
                 message: 'Events retrieved successfully',
-                events: events
-            })
+                events
+            });
+        } catch (error) {
+            next(error);
         }
-        }catch(error){
-            next(error)
+    },
+
+    register_event: async (req, res, next) => {
+        try {
+            // Obtener el token del encabezado
+            const token = req.headers.authorization?.split(' ')[1];
+            if (!token) {
+                return res.status(401).json({ message: 'No token provided' });
+            }
+
+            // Verificar el token
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            const userId = decoded.id;
+
+            // Buscar al usuario
+            const user = await User.findById(userId);
+            if (!user) {
+                return res.status(404).json({ message: 'User not found' });
+            }
+
+            // Obtener el ID del evento desde el cuerpo de la solicitud
+            const { eventId } = req.body;
+
+            // Buscar el evento
+            const event = await Event.findById(eventId);
+            if (!event) {
+                return res.status(404).json({ message: 'Event not found' });
+            }
+
+            // Verificar la edad del usuario
+            if (user.age < event.minimumAge) {
+                return res.status(403).json({ message: 'User does not meet the minimum age requirement' });
+            }
+
+            // Verificar la disponibilidad de cupos
+            if (event.attendees.length >= event.occupancy) {
+                return res.status(400).json({ message: 'No available spots for this event' });
+            }
+
+            // Agregar al usuario a la lista de asistentes del evento
+            event.attendees.push(user._id);
+            await event.save();
+
+            // Agregar el evento a la lista de eventos del usuario
+            user.events.push(event._id);
+            await user.save();
+
+            return res.status(200).json({
+                success: true,
+                message: 'User registered successfully to the event',
+                event
+            });
+        } catch (error) {
+            next(error);
         }
     }
+};
 
-}
-
-export default controller
+export default controller;
