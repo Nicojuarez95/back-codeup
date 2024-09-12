@@ -1,31 +1,11 @@
 import express from 'express'
-import User from '../models/User.js'
+import controller from '../controllers/userControllers.js'
+
+const {sign_up, sign_in} = controller
+
 let router = express.Router();
 
-/* GET users listing. */
-router.get('/', function(req, res, next) {
-  res.send('Aca se ven los usuarios');
-});
+router.post('/signup', sign_up)
+router.post('/signin', sign_in)
 
-router.post(//metodo para crear usuarios
-    '/',
-    async (req,res)=>{
-        try{
-            let user = await User.create(req.body)
-            return res.json({
-                success: true,
-                user: user,
-                id: user._id
-            })
-        } catch(error){
-            console.log(error)
-            return res.json({
-                success: false,
-                messagge: "no se pudo crear el usuario"
-        })
-    }
-    }
-)
-
-// module.exports = router;
 export default router
