@@ -122,7 +122,44 @@ const controller = {
         } catch (error) {
             next(error);
         }
-    }
+    },
+     // Actualizar un evento
+     update_event: async (req, res, next) => {
+        try {
+            // Extraer el token del encabezado
+            const token = req.headers.authorization?.split(' ')[1];
+            if (!token) {
+                return res.status(401).json({ message: 'No token provided' });
+            }
+
+            // Verificar el token
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            const userId = decoded.id;
+
+            // Buscar el evento
+            const { id } = req.params;
+            const event = await Event.findById(id);
+            if (!event) {
+                return res.status(404).json({ message: 'Event not found' });
+            }
+
+            // Verificar si el usuario es el organizador del evento
+            if (event.organizer.toString() !== userId) {
+                return res.status(403).json({ message: 'You are not authorized to update this event' });
+            }
+
+            // Actualizar el evento
+            const updatedEvent = await Event.findByIdAndUpdate(id, req.body, { new: true });
+
+            return res.status(200).json({
+                success: true,
+                message: 'Event updated successfully',
+                event: updatedEvent
+            });
+        } catch (error) {
+            next(error);
+        }
+    },
 };
 
 export default controller;
