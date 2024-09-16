@@ -1,4 +1,3 @@
-//crear controlador para crear y obtener los places
 import jwt from 'jsonwebtoken';
 import Place from '../models/placeSchema.js';
 import User from '../models/userSchema.js';
