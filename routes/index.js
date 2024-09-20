@@ -8,7 +8,6 @@ const app = express();
 
 // Middleware para parsear JSON
 app.use(express.json());
-
 // Configuración de Passport
 app.use(passport.initialize());
 
