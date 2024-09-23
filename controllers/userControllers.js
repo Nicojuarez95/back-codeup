@@ -1,7 +1,7 @@
 import bcryptjs from 'bcryptjs';
 import jsonwebtoken from 'jsonwebtoken';
 import User from '../models/userSchema.js';
-import Event from '../models/eventSchema.js'; // Asegúrate de importar el modelo Event
+import Event from '../models/eventSchema.js';
 
 const controller = {
 
