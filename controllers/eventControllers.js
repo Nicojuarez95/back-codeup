@@ -180,7 +180,6 @@ const controller = {
                 return res.status(404).json({ message: 'Event not found' });
             }
 
-            // Puedes agregar lógica adicional si deseas verificar si el usuario tiene permiso para ver el evento
             // Por ejemplo, si solo los organizadores pueden ver sus propios eventos:
             // if (event.organizer.toString() !== userId) {
             //     return res.status(403).json({ message: 'You are not authorized to view this event' });
