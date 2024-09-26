@@ -160,6 +160,41 @@ const controller = {
             next(error);
         }
     },
+
+    getEventById: async (req, res, next) => {
+        try {
+            // Extraer el token del encabezado
+            const token = req.headers.authorization?.split(' ')[1];
+            if (!token) {
+                return res.status(401).json({ message: 'No token provided' });
+            }
+
+            // Verificar el token
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            const userId = decoded.id;
+
+            // Buscar el evento
+            const { id } = req.params;
+            const event = await Event.findById(id).populate('place').populate('organizer');
+            if (!event) {
+                return res.status(404).json({ message: 'Event not found' });
+            }
+
+            // Puedes agregar lógica adicional si deseas verificar si el usuario tiene permiso para ver el evento
+            // Por ejemplo, si solo los organizadores pueden ver sus propios eventos:
+            // if (event.organizer.toString() !== userId) {
+            //     return res.status(403).json({ message: 'You are not authorized to view this event' });
+            // }
+
+            return res.status(200).json({
+                success: true,
+                message: 'Event retrieved successfully',
+                event
+            });
+        } catch (error) {
+            next(error); // Pasa el error al manejador de errores
+        }
+    },
 };
 
 export default controller;

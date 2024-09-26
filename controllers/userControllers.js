@@ -7,6 +7,14 @@ const controller = {
 
     sign_up: async (req, res, next) => {
         try {
+             // Verifica si el correo electrónico ya está en uso
+            const existingUser = await User.findOne({ email: req.body.email });
+            if (existingUser) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'El correo electrónico ya está registrado. Por favor, elige otro.'
+                });
+            }
             const hashedPassword = await bcryptjs.hash(req.body.password, 10);
 
             const user = await User.create({
