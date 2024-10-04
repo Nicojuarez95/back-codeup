@@ -66,7 +66,8 @@ const controller = {
             return res.status(200).json({
                 success: true,
                 message: 'User logged in successfully',
-                token: token
+                token: token,
+                user
             });
 
         } catch (error) {
