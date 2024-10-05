@@ -99,15 +99,24 @@ const controller = {
     updatePassword: async (req, res, next) => {
         try {
             const { oldPassword, newPassword } = req.body;
+    
+            // Validar que oldPassword y newPassword están presentes
+            if (!oldPassword || !newPassword) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Both old and new passwords are required'
+                });
+            }
+    
             const user = await User.findById(req.user.id);
-
+    
             if (!user) {
                 return res.status(404).json({
                     success: false,
                     message: 'User not found'
                 });
             }
-
+    
             const isMatch = await bcryptjs.compare(oldPassword, user.password);
             if (!isMatch) {
                 return res.status(400).json({
@@ -115,10 +124,10 @@ const controller = {
                     message: 'Old password is incorrect'
                 });
             }
-
+    
             user.password = await bcryptjs.hash(newPassword, 10);
             await user.save();
-
+    
             res.status(200).json({
                 success: true,
                 message: 'Password updated successfully'
@@ -193,6 +202,41 @@ const controller = {
             res.status(200).json({
                 success: true,
                 message: 'Rating added successfully'
+            });
+        } catch (error) {
+            next(error);
+        }
+    },
+    getRegisteredEvents: async (req, res, next) => {
+        try {
+            // Obtener el ID del usuario autenticado desde el token
+            const userId = req.user.id;
+
+            // Buscar al usuario por su ID y obtener los eventos registrados
+            const user = await User.findById(userId).populate('events');
+
+            if (!user) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'User not found'
+                });
+            }
+
+            // Obtener los eventos del usuario
+            const registeredEvents = user.events;
+
+            // Si el usuario no está registrado en ningún evento
+            if (!registeredEvents.length) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'No registered events found for this user'
+                });
+            }
+
+            // Responder con la lista de eventos
+            res.status(200).json({
+                success: true,
+                events: registeredEvents
             });
         } catch (error) {
             next(error);

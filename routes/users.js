@@ -2,7 +2,7 @@ import express from 'express'
 import controller from '../controllers/userControllers.js'
 import passport from 'passport';
 
-const {sign_up, sign_in, updateUser, updatePassword, leaveComment, rateEvent} = controller
+const {sign_up, sign_in, updateUser, updatePassword, leaveComment, rateEvent, getRegisteredEvents} = controller
 
 let router = express.Router();
 
@@ -17,6 +17,7 @@ router.put('/update', updateUser); // Actualizar datos del usuario
 router.put('/update-password', updatePassword); // Actualizar contraseña del usuario
 router.post('/event/:id/comment', leaveComment); // Dejar comentario en evento
 router.post('/event/:id/rate', rateEvent); // Puntuar evento
+router.get('/events', getRegisteredEvents);
 
 
 export default router
