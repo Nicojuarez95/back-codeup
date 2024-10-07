@@ -150,12 +150,12 @@ const controller = {
                 });
             }
 
-            if (event.date > new Date()) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Cannot comment on future events'
-                });
-            }
+            // if (event.date > new Date()) {
+            //     return res.status(400).json({
+            //         success: false,
+            //         message: 'Cannot comment on future events'
+            //     });
+            // }
 
             event.comments.push({ user: req.user.id, comment });
             await event.save();
